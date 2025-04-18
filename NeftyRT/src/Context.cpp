@@ -54,6 +54,7 @@ namespace NEFTY {
             std::cerr << "Cannot create logical device." << std::endl;
         }
 
+        queue = deviceUnique->getQueue(queueFamilySelection, 1);
 
 
     }
