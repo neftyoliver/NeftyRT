@@ -11,6 +11,10 @@
 #define QUEUE_PRIORITY 1.0f
 #define PRINT_INFO
 
+#define APP_NAME "NeftyRT"
+
+#define WIDTH 1200
+#define HEIGHT 800
 
 
 #ifdef NDEBUG
@@ -32,8 +36,9 @@ namespace NEFTY {
      **/
     typedef struct VkContext_ {
         struct {
-            vk::UniqueSurfaceKHR surface;
-            vk::UniqueSwapchainKHR swapChaine;
+            SDL_Window* window;
+            vk::UniqueSurfaceKHR surfaceUnique;
+            vk::UniqueSwapchainKHR swapChaineUnique;
             std::vector<VkImage> swapChainImages{};
             std::vector<VkImageView> swapChainImageViews{};
             std::vector<VkFramebuffer> framebuffer{};
@@ -55,8 +60,8 @@ namespace NEFTY {
         const float queuePriority = 1.0;
         vk::UniqueDevice deviceUnique;
         vk::Queue queue;
-        vk::UniqueCommandPool commandPool;
-        vk::UniqueCommandBuffer commandBuffer;
+        vk::UniqueCommandPool commandPoolUnique;
+        vk::UniqueCommandBuffer commandBufferUnique;
 
         Synchronizer synchronizer = {};
 

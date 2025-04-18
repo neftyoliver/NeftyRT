@@ -20,8 +20,6 @@
 #define PRINT_INFO
 
 namespace vkut {
-    #define WIDTH 1200
-    #define HEIGHT 800
 
     inline VkBool32 checkValidationLayerSupport() {
         uint32_t layerCount;
@@ -108,7 +106,7 @@ namespace vkut {
         VkSurfaceTransformFlagBitsKHR preTransform;
     } SurfaceInfo;
 
-    inline SurfaceInfo getSurfaceInfo(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, GLFWwindow * resizedWindow) {
+    inline SurfaceInfo getSurfaceInfo(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface) {
         uint32_t surfaceFormatCount = 0;
         vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &surfaceFormatCount, nullptr);
         std::vector<VkSurfaceFormatKHR> surfaceFormats(surfaceFormatCount);
@@ -130,18 +128,10 @@ namespace vkut {
         VkSurfaceCapabilitiesKHR capabilities;
         vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &capabilities);
         VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-        VkExtent2D extent = VkExtent2D(1, 1);
+        vk::Extent2D extent = vk::Extent2D(1, 1);
         if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) {
             extent.width = capabilities.currentExtent.width;
             extent.height = capabilities.currentExtent.height;
-        }
-        else if (resizedWindow != nullptr) {
-            int width, height;
-            glfwGetFramebufferSize(resizedWindow, &width, &height);
-        }
-        else {
-            extent.width = WIDTH;
-            extent.height = HEIGHT;
         }
 
         return SurfaceInfo {

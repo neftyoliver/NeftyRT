@@ -9,8 +9,11 @@ namespace NEFTY {
     void beforeRender();
 
     inline VkContext_::VkContext_() {
+        SDL_Init(SDL_INIT_EVERYTHING);
+        PresentationUnit.window = SDL_CreateWindow(APP_NAME, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+            WIDTH, HEIGHT, SDL_WINDOW_VULKAN | SDL_WINDOW_SHOWN);
 
-        auto appInfo = vk::ApplicationInfo("NeftyRT", 0.0, "NeftyRT", 0.0, VK_API_VERSION_1_4);
+        auto appInfo = vk::ApplicationInfo(APP_NAME, 0.0, APP_NAME, 0.0, VK_API_VERSION_1_4);
         auto instCreateInfo = vk::InstanceCreateInfo(
             vk::InstanceCreateFlagBits::eEnumeratePortabilityKHR,
             &appInfo,
@@ -61,39 +64,24 @@ namespace NEFTY {
 
 
     inline void VkContext_::programLoop() const {
-        while ( !glfwWindowShouldClose(PresentationUnit.window) ) {
-
-
-
-            glfwSwapBuffers(PresentationUnit.window);
-            glfwPollEvents();
-
-
-        }
     }
 
     inline VkContext_::~VkContext_() {
         for (const auto imageView: PresentationUnit.swapChainImageViews) {
-            vkDestroyImageView(device, imageView, nullptr);
+            vkDestroyImageView(deviceUnique.get(), imageView, nullptr);
         }
 
         for (const auto image: PresentationUnit.swapChainImages) {
-            vkDestroyImage(device, image, nullptr);
+            vkDestroyImage(deviceUnique.get(), image, nullptr);
         }
 
-        vkDestroyFence(device, synchronizer.fence, nullptr);
+        vkDestroyFence(deviceUnique.get(), synchronizer.fenceUnique.get(), nullptr);
 
-        vkDestroySwapchainKHR(device, PresentationUnit.swapChaine, nullptr);
+        vkDestroySwapchainKHR(deviceUnique.get(), PresentationUnit.swapChaineUnique.get(), nullptr);
 
-        vkDestroyCommandPool(device, commandPool, nullptr);
-        vkDestroyDevice(device, nullptr);
+        vkDestroyCommandPool(deviceUnique.get(), commandPoolUnique.get(), nullptr);
+        vkDestroyDevice(deviceUnique.get(), nullptr);
 
-
-        glfwDestroyWindow(PresentationUnit.window);
-
-
-        //vkDestroySurfaceKHR(instance, PresentationUnit.surface, nullptr);
-        //vkDestroyInstance(instance, nullptr);
 
         std::cout << "Nutshell says goodbye~" << std::endl; // if this doesn't happen, you are doing destroy in wrong way.
     }
