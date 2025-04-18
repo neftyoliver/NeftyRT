@@ -10,6 +10,8 @@
 #include <windows.h>
 #endif
 
+#define MAKE_FUNCTION_TYPE(returnType, funcPtr, param ...) typedef returnType (*funcPtr##_T)(param)
+
 typedef union PTR64_ {
   void * asVoidPtr;
   uint64_t asUint64;
@@ -38,12 +40,20 @@ typedef union WindowPointer_ {
   HWND * adWin32Window;
 } WindowPointer;
 
+typedef PTR64 * ( * GenericFunctionPtr)();
+
 typedef union FunctionPTR64_ {
   void * asVoidPtr;
   uint64_t asUint64;
-  void * ( * functionPtr)();
+  PTR64 asPTR64;
+  GenericFunctionPtr asFunction;
 } FunctionPTR64; //You have to remember the parameters.
 
+inline FunctionPTR64 ptr64ToFunctionPtr(PTR64 ptr64) {
+  FunctionPTR64 functionPtr;
+  functionPtr.asVoidPtr = ptr64.asVoidPtr;
+  return functionPtr;
+}
 
 
 typedef struct WindowObject_ {
