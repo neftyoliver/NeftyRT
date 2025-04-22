@@ -5,7 +5,7 @@
 #include <vulkan/vulkan.h>
 #include <SDL2/SDL.h>
 
-#include "vulkan_utility.h"
+#include "../include/vulkan_utility.h"
 
 #define DEVICE_SELECTION 0
 #define QUEUE_PRIORITY 1.0f

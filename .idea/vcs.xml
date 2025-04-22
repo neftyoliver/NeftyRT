@@ -2,5 +2,12 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/glfw" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/glslang" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/glslang/External/googletest" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/glslang/External/spirv-tools" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/glslang/External/spirv-tools/external/spirv-headers" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/imgui" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/tinyobjloader" vcs="Git" />
   </component>
 </project>
