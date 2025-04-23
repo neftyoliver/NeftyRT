@@ -1,5 +1,6 @@
-#include <vulkan/vulkan.hpp>
-#include <nefty_rt.h>
+
+#include "NeftyRendererVK.h"
+#include "vulkan_utility.h"
 
 namespace NEFTY {
     const char * deviceExtensions[255] = {
@@ -8,10 +9,11 @@ namespace NEFTY {
 
     void beforeRender();
 
-    inline VkContext_::VkContext_() {
-        SDL_Init(SDL_INIT_EVERYTHING);
-        PresentationUnit.window = SDL_CreateWindow(APP_NAME, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-            WIDTH, HEIGHT, SDL_WINDOW_VULKAN | SDL_WINDOW_SHOWN);
+    NeftyContext::NeftyContext() {
+
+        if (vkut::checkValidationLayerSupport() == vk::True) {
+            instanceLayerRequestList.push_back("VK_LAYER_KHRONOS_validation");
+        }
 
         auto appInfo = vk::ApplicationInfo(APP_NAME, 0.0, APP_NAME, 0.0, VK_API_VERSION_1_4);
         auto instCreateInfo = vk::InstanceCreateInfo(
@@ -22,6 +24,9 @@ namespace NEFTY {
             static_cast<uint32_t>(instanceExtensionRequestList.size()),
             instanceExtensionRequestList.data()
             );
+
+
+
 
         instanceUnique = vk::createInstanceUnique(instCreateInfo);
 
@@ -34,7 +39,6 @@ namespace NEFTY {
 
         physicalDevicesUnique->insert(physicalDevicesUnique->begin(), enumerationPhysicalDevice.begin(), enumerationPhysicalDevice.end());
 
-
         if (physicalDevicesUnique->empty()) {
             std::cerr << "No device available." << std::endl;
         }
@@ -46,27 +50,27 @@ namespace NEFTY {
         std::cout << "Physical device selected: " << "number: " << DEVICE_SELECTION  << std::endl << "device name:" << deviceProperties.deviceName << std::endl;
 
 #endif
+
         const uint32_t queueFamilySelection = vkut::autoSelectQueueFamily(physicalDevicesUnique->at(DEVICE_SELECTION), DEVICE_SELECTION);
 
 
         const auto queueCreateInfo = vk::DeviceQueueCreateInfo({}, queueFamilySelection, 1, &queuePriority);
-        const auto deviceCreateInfo = vk::DeviceCreateInfo({}, 1, &queueCreateInfo, 0, nullptr, 0, deviceExtensions);
+        const auto deviceCreateInfo = vk::DeviceCreateInfo({}, 1, &queueCreateInfo, 0, nullptr, 1, deviceExtensions);
         const vk::PhysicalDevice pd = physicalDevicesUnique->at(DEVICE_SELECTION);
         deviceUnique = pd.createDeviceUnique(deviceCreateInfo);
         if (deviceUnique.get() == VK_NULL_HANDLE) {
             std::cerr << "Cannot create logical device." << std::endl;
         }
 
-        queue = deviceUnique->getQueue(queueFamilySelection, 1);
+        queue = deviceUnique->getQueue(queueFamilySelection, 0);
 
 
     }
 
-
-    inline void VkContext_::programLoop() const {
+    void beforeRender() {
     }
 
-    inline VkContext_::~VkContext_() {
+    NeftyContext::~NeftyContext() {
         for (const auto imageView: PresentationUnit.swapChainImageViews) {
             vkDestroyImageView(deviceUnique.get(), imageView, nullptr);
         }

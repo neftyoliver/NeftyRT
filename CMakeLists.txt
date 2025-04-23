@@ -7,7 +7,10 @@ set(CMAKE_CXX_STANDARD 23)
 
 
 if(${WIN32})
-    set(VULKAN_SDK $ENV{VK_SDK_PATH})
+    set(VULKAN_BIN_DIR "$ENV{VK_SDK_PATH}/Bin")
+    set(VULKAN_INCLUDE "$ENV{VK_SDK_PATH}/Include")
+    set(VULKAN_LIB_DIR "$ENV{VK_SDK_PATH}/Lib")
+    set(VULKAN_LIBRARIES vulkan-1)
 endif ()
 
 add_subdirectory(glslang)
@@ -31,25 +34,71 @@ add_library(imgui STATIC
         imgui/backends/imgui_impl_glfw.cpp
         imgui/backends/imgui_impl_glfw.h
 )
+
 target_include_directories(imgui
         PUBLIC imgui
         PUBLIC glfw/include
-        PUBLIC ${VULKAN_SDK}/Include
+        PUBLIC ${VULKAN_INCLUDE}
 )
 
+add_subdirectory(NeftyRendererVK)
+
+function(add_program target)
+    add_dependencies(${target} NeftyRendererVK glfw glslang)
+
+    target_include_directories(${target}
+            PRIVATE include
+            PRIVATE NeftyRendererVK
+            PRIVATE glfw/include
+            PRIVATE ${VULKAN_INCLUDE}
+    )
+    target_link_directories(${target} PRIVATE ${VULKAN_LIB_DIR})
+    target_link_libraries(${target} PRIVATE NeftyRendererVK PRIVATE glfw PRIVATE glslang PUBLIC ${VULKAN_LIBRARIES})
+endfunction()
+
+function(registerShader theTarget parShaderFileName)
+    find_file(shaderFileName NAMES ${parShaderFileName} PATHS "${CMAKE_SOURCE_DIR}/shaders")
+    set(FileTypedName ${parShaderFileName})
 
 
+
+    if (NOT ${shaderFileName} STREQUAL "shaderFileName-NOTFOUND")
+        message(STATUS "Shader source code ${shaderFileName} exist!")
+
+        if(NOT EXISTS shader_cash/${shaderFileName})
+            message("creating shader cash in ${shaderFileName}")
+            if (NOT EXISTS shader_cash)
+                file(MAKE_DIRECTORY ${CMAKE_SOURCE_DIR}/shader_cash)
+            endif ()
+            file(COPY ${shaderFileName} DESTINATION "${CMAKE_SOURCE_DIR}/shader_cash")
+        endif ()
+
+        if (shaders/${FileTypedName} IS_NEWER_THAN shader_cash/${FileTypedName})
+            file(COPY ${shaderFileName} DESTINATION "${CMAKE_SOURCE_DIR}/shader_cash")
+            set(PURE_NAME "")
+            get_filename_component(PURE_NAME ${FileTypedName} NAME_WE)
+            #[==[
+            add_custom_command( TARGET theTarget POST_BUILD
+                    OUTPUT ${SPIRV_BIN}
+                    COMMAND "${VULKAN_BIN_DIR}/glslc" -V ${shaderFileName} --target-env="vulkan1.4" -o "${SPIRV_BIN}.spv"
+                    DEPENDS ${shaderFileName}
+            )
+            ]==]
+        endif ()
+    else()
+        #Not a shader type
+        message(WARNING "${shaderFileName} is not a shader type file.")
+    endif ()
+
+endfunction()
 
 #[==[
 The main project of this repo.
 ]==]
 
-add_subdirectory(NeftyRendererVK)
-
-add_executable(NeftyRT
-        src/main.cpp
-)
-
-add_dependencies(NeftyRT NeftyRendererVK glfw glslang)
 
 
+
+add_executable(GraphicsBasic src/GraphicsBasic.cpp)
+add_program(GraphicsBasic)
+registerShader(GraphicsBasic GraphicsBasicVertex1.vert)

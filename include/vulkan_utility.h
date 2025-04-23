@@ -13,6 +13,7 @@
  *
  */
 
+#include <fstream>
 #include <iostream>
 #include <vector>
 #include <vulkan/vulkan.h>
@@ -21,11 +22,14 @@
 
 namespace vkut {
 
-    inline VkBool32 checkValidationLayerSupport() {
+    inline vk::Bool32 checkValidationLayerSupport() {
         uint32_t layerCount;
         vkEnumerateInstanceLayerProperties(&layerCount, NULL);
         std::vector<VkLayerProperties> availableLayers(layerCount);
         vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
+
+
+
         for (uint32_t i = 0; i < layerCount; i++) {
             if (std::strcmp(availableLayers[i].layerName, "VK_LAYER_KHRONOS_validation") != 0) {
                 std::cerr << "Validation layer supports!" << availableLayers.at(i).layerName << std::endl;
@@ -69,7 +73,7 @@ namespace vkut {
 
         for (uint32_t i = 0; i < queueFamilyPropertiesCount; i += 1) {
             #ifdef PRINT_INFO
-            std::cout << "QueueFamily on" << i  << " supports " << queueFamiliyProperties.at(i).queueCount << " with queue ability";
+            std::cout << "QueueFamily on " << i  << " supports " << queueFamiliyProperties.at(i).queueCount << " with queue ability";
             if (queueFamiliyProperties.at(i).queueFlags | VK_QUEUE_GRAPHICS_BIT) {
                 std::cout << " VK_QUEUE_GRAPHICS_BIT ";
             }
@@ -145,4 +149,33 @@ namespace vkut {
         };
     }
 
+    inline std::vector<uint32_t> readShaderCodeUINT32(const std::string &shaderFileName) {
+        std::vector<uint32_t> buffer{};
+
+        std::ifstream file(shaderFileName, std::ios::ate | std::ios::binary);
+
+        if (!file.is_open()) {
+            return buffer;
+        }
+
+        // find what the size of the file is by looking up the location of the cursor
+        // because the cursor is at the end, it gives the size directly in bytes
+        const uint32_t fileSize = file.tellg();
+
+        // spirv expects the buffer to be on uint32, so make sure to reserve int
+        // vector big enough for the entire file
+        //std::vector<uint32_t> buffer(fileSize / sizeof(uint32_t));
+
+        buffer.resize(fileSize / sizeof(uint32_t));
+
+        // put file cursor at beginning
+        file.seekg(0);
+        // load the entire file into the buffer
+        file.read(reinterpret_cast<char *>(buffer.data()), fileSize);
+
+        // now that the file is loaded into the buffer, we can close it
+        file.close();
+
+        return buffer;
+    }
 }

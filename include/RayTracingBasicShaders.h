@@ -1,0 +1,9 @@
+//
+// Created by NeftyOliver on 25. 4. 23.
+//
+
+#ifndef RAYTRACINGBASICSHADERS_H
+#define RAYTRACINGBASICSHADERS_H
+
+
+#endif //RAYTRACINGBASICSHADERS_H
