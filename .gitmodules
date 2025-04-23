@@ -10,3 +10,6 @@
 [submodule "glslang"]
 	path = glslang
 	url = https://github.com/KhronosGroup/glslang.git
+[submodule "vk-bootstrap"]
+	path = vk-bootstrap
+	url = https://github.com/charles-lunarg/vk-bootstrap.git

@@ -1,4 +1,3 @@
-#include <vulkan//vulkan.hpp>
 #include <GLFW/glfw3.h>
 
 #include "vulkan_utility.h"
@@ -7,7 +6,7 @@
 
 
 
-struct GraphicsBasic : NEFTY::ExecutablesReference {
+struct GraphicsBasic : nefty::ExecutablesReference {
     typedef ExecutablesReference SUPER;
 
 
@@ -18,7 +17,7 @@ struct GraphicsBasic : NEFTY::ExecutablesReference {
     vk::RenderPass renderPass;
     vk::SubpassDescription subpass;
 
-    vk::UniquePipeline pipline = vk::UniquePipeline();
+    vk::UniquePipeline pipline;
     vk::PipelineLayout pipelineLayout;
     vk::DescriptorSetLayout descriptorSetLayout;
     vk::DescriptorSet descriptorSet;
@@ -29,14 +28,14 @@ struct GraphicsBasic : NEFTY::ExecutablesReference {
 
         vk::PipelineRenderingCreateInfo renderingInfo {};
 
-        auto vecVertexShaderCode = vkut::readShaderCodeUINT32("GraphicsBasicFragment.frag");
-        auto vecFragmentShaderCodes = vkut::readShaderCodeUINT32("GraphicsBasicFragment.frag");
+        auto vecVertexShaderCode = vkut::readShaderCodeUINT32("GraphicsBasicFragment.spv");
+        auto vecFragmentShaderCodes = vkut::readShaderCodeUINT32("GraphicsBasicFragment.spv");
 
         auto vertexShaderModule = context.deviceUnique->createShaderModuleUnique(
             vk::ShaderModuleCreateInfo(
                 {},
-                ,
-                ,
+                vecVertexShaderCode.size() * 4,
+                vecVertexShaderCode.data(),
                     nullptr
                 )
         );
@@ -44,36 +43,29 @@ struct GraphicsBasic : NEFTY::ExecutablesReference {
         auto fragmentShaderModule = context.deviceUnique->createShaderModuleUnique(
             vk::ShaderModuleCreateInfo(
                 {},
-                    GRAPHICS_BASIC::fragmentCode.size(),
-                    GRAPHICS_BASIC::fragmentCode.c_str(),
+                    vecFragmentShaderCodes.size() * 4,
+                    vecFragmentShaderCodes.data(),
                     nullptr
                 )
         );
 
+
+
         constexpr uint32_t SHADER_COUNT = 2;
 
-        /**
-        *: pNext{ pNext_ }
-      , flags{ flags_ }
-      , stage{ stage_ }
-      , module{ module_ }
-      , pName{ pName_ }
-      , pSpecializationInfo{ pSpecializationInfo_ }
-         */
-
-        vk::PipelineShaderStageCreateInfo vertexShaderStages {};
+        auto vertexShaderStages = vk::PipelineShaderStageCreateInfo {};
         vertexShaderStages.setModule(vertexShaderModule.get());
         vertexShaderStages.setStage(vk::ShaderStageFlagBits::eVertex);
         vertexShaderStages.setPName("main");
 
-        vk::PipelineShaderStageCreateInfo fragmentShaderStages {};
+        auto fragmentShaderStages = vk::PipelineShaderStageCreateInfo{};
         fragmentShaderStages.setModule(fragmentShaderModule.get());
         fragmentShaderStages.setStage(vk::ShaderStageFlagBits::eFragment);
         fragmentShaderStages.setPName("main");
 
         vk::PipelineShaderStageCreateInfo shaderStages[SHADER_COUNT] { vertexShaderStages, fragmentShaderStages};
 
-        vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo {};
+        auto descriptorSetLayoutCreateInfo = vk::DescriptorSetLayoutCreateInfo {};
 
         constexpr uint32_t bindingCount = 2;
         constexpr vk::DescriptorSetLayoutBinding bindings[bindingCount] = {
@@ -85,42 +77,44 @@ struct GraphicsBasic : NEFTY::ExecutablesReference {
             },
 
             vk::DescriptorSetLayoutBinding {
-                0,
+                1,
                 vk::DescriptorType::eUniformBuffer,
                 3,
                 vk::ShaderStageFlagBits::eFragment,
             }
         };
+
         descriptorSetLayoutCreateInfo.setBindingCount(bindingCount);
         descriptorSetLayoutCreateInfo.setBindings(bindings);
         descriptorSetLayoutCreateInfo.setFlags(vk::DescriptorSetLayoutCreateFlagBits::eDescriptorBufferEXT);
         vk::DescriptorSetLayout descriptorSetLayout = context.deviceUnique->createDescriptorSetLayout(descriptorSetLayoutCreateInfo);
 
-        vk::PipelineVertexInputStateCreateInfo vertexInputStateCreateInfo {}; //Don't need if not doing any vertex input
-        vk::PipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo {};
+        auto vertexInputStateCreateInfo = vk::PipelineVertexInputStateCreateInfo {}; //Don't need if not doing any vertex input
+        auto inputAssemblyStateCreateInfo = vk::PipelineInputAssemblyStateCreateInfo {};
         inputAssemblyStateCreateInfo.setTopology(vk::PrimitiveTopology::eLineStrip);
         inputAssemblyStateCreateInfo.setPrimitiveRestartEnable(VK_FALSE);
 
-        vk::PipelineTessellationStateCreateInfo tessellation_state_create_info {};
+        auto tessellation_state_create_info = vk::PipelineTessellationStateCreateInfo {}; //Blank for now...
 
-        vk::PipelineViewportStateCreateInfo viewportStateCreateInfo {};
+        auto viewportStateCreateInfo = vk::PipelineViewportStateCreateInfo {};
         viewportStateCreateInfo.setViewportCount(1);
         viewportStateCreateInfo.setScissorCount(1);
 
-        vk::PipelineRasterizationStateCreateInfo rasterizationStateCreateInfo {};
+        auto rasterizationStateCreateInfo = vk::PipelineRasterizationStateCreateInfo {};
         rasterizationStateCreateInfo.setPolygonMode(vk::PolygonMode::eLine);
         rasterizationStateCreateInfo.setLineWidth(2.0f);
         rasterizationStateCreateInfo.setCullMode(vk::CullModeFlagBits::eFront);
         rasterizationStateCreateInfo.setFrontFace(vk::FrontFace::eCounterClockwise);
 
-        vk::PipelineColorBlendStateCreateInfo colorBlendStateCreateInfo {};
+        auto colorBlendStateCreateInfo = vk::PipelineColorBlendStateCreateInfo {};
         colorBlendStateCreateInfo.setLogicOpEnable(VK_FALSE);
         colorBlendStateCreateInfo.setLogicOp(vk::LogicOp::eCopy);
         colorBlendStateCreateInfo.setAttachmentCount(1);
-        vk::PipelineColorBlendAttachmentState colorBlendAttachment = {};
+
+        auto colorBlendAttachment = vk::PipelineColorBlendAttachmentState {};
         colorBlendStateCreateInfo.setAttachments(colorBlendAttachment);
 
-        vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo {}; //disabled all depth operation
+        auto depthStencilStateCreateInfo = vk::PipelineDepthStencilStateCreateInfo {}; //disabled all depth operation
         depthStencilStateCreateInfo.depthTestEnable = VK_FALSE;
         depthStencilStateCreateInfo.depthWriteEnable = VK_FALSE;
         depthStencilStateCreateInfo.depthCompareOp = vk::CompareOp::eNever;
@@ -130,27 +124,58 @@ struct GraphicsBasic : NEFTY::ExecutablesReference {
         depthStencilStateCreateInfo.setMinDepthBounds(0.0f);
         depthStencilStateCreateInfo.setMaxDepthBounds(1.0f);
 
-        vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo {};
-        pipelineLayoutCreateInfo.setSetLayoutCount(1);
+        auto pipelineLayoutCreateInfo = vk::PipelineLayoutCreateInfo{};
+        pipelineLayoutCreateInfo.setSetLayoutCount(0);
+        pipelineLayoutCreateInfo.setPSetLayouts(nullptr);
+        pipelineLayoutCreateInfo.setLayoutCount = 0;
         pipelineLayoutCreateInfo.setPSetLayouts(nullptr);
 
-        vk::GraphicsPipelineCreateInfo pipelineCreateInfo {};
-        pipelineCreateInfo.setPNext(&renderingInfo);
-        pipelineCreateInfo.setStageCount(SHADER_COUNT);
-        pipelineCreateInfo.setStages(shaderStages);
-        pipelineCreateInfo.setPVertexInputState(&vertexInputStateCreateInfo);
-        pipelineCreateInfo.setPInputAssemblyState(&inputAssemblyStateCreateInfo);
-        pipelineCreateInfo.setPTessellationState(&tessellation_state_create_info); //not using
-        pipelineCreateInfo.setPViewportState(&viewportStateCreateInfo);
-        pipelineCreateInfo.setPRasterizationState(&rasterizationStateCreateInfo);
-        pipelineCreateInfo.setPColorBlendState(&colorBlendStateCreateInfo);
-        pipelineCreateInfo.setPDepthStencilState(&depthStencilStateCreateInfo);
-        pipelineCreateInfo.setLayout(pipelineLayout);
-        pipelineCreateInfo.setRenderPass(renderPass);
+        auto dynamicStateCreateInfo = vk::PipelineDynamicStateCreateInfo {};
+        std::vector<vk::DynamicState> dynamicStages {
+            vk::DynamicState::eViewport,
+            vk::DynamicState::eScissor,
+        };
+        dynamicStateCreateInfo.setPDynamicStates(dynamicStages.data());
+        dynamicStateCreateInfo.setDynamicStateCount(dynamicStages.size());
+
+        auto graphicsPipelineCreateInfo = vk::GraphicsPipelineCreateInfo {};
+        //graphicsPipelineCreateInfo.setPNext(&renderingInfo);
+        graphicsPipelineCreateInfo.setStageCount(SHADER_COUNT);
+        graphicsPipelineCreateInfo.setStages(shaderStages);
+        graphicsPipelineCreateInfo.setPVertexInputState(&vertexInputStateCreateInfo);
+        graphicsPipelineCreateInfo.setPInputAssemblyState(&inputAssemblyStateCreateInfo);
+        graphicsPipelineCreateInfo.setPTessellationState(&tessellation_state_create_info); //not using
+        graphicsPipelineCreateInfo.setPViewportState(&viewportStateCreateInfo);
+        graphicsPipelineCreateInfo.setPRasterizationState(&rasterizationStateCreateInfo);
+        graphicsPipelineCreateInfo.setPColorBlendState(&colorBlendStateCreateInfo);
+        graphicsPipelineCreateInfo.setPDepthStencilState(&depthStencilStateCreateInfo);
+        graphicsPipelineCreateInfo.setLayout(pipelineLayout);
+        graphicsPipelineCreateInfo.setRenderPass(VK_NULL_HANDLE);
+        graphicsPipelineCreateInfo.setPDynamicState(&dynamicStateCreateInfo);
 
 
-        auto graphicsPipeline = context.deviceUnique->createGraphicsPipelineUnique(VK_NULL_HANDLE, pipelineCreateInfo);
-        pipline = std::move(graphicsPipeline.value);
+
+        /**
+        *pipeline_create.colorAttachmentCount    = 1;
+pipeline_create.pColorAttachmentFormats = &color_rendering_format;
+pipeline_create.depthAttachmentFormat   = depth_format;
+pipeline_create.stencilAttachmentFormat = depth_format;
+
+        vk::Format colorAttachmentFormat = vk::Format::eR8G8B8A8Srgb;
+
+        vk::PipelineRenderingCreateInfoKHR dynamicRenderingPiplineCreateInfo {};
+        dynamicRenderingPiplineCreateInfo.setColorAttachmentCount(1);
+        dynamicRenderingPiplineCreateInfo.setColorAttachmentFormats(colorAttachmentFormat);
+        //graphicsPipelineCreateInfo.setPNext(&dynamicRenderingPiplineCreateInfo);
+
+        */
+
+
+
+        auto uniqueGraphicsPipeline = context.deviceUnique->createGraphicsPipelineUnique(VK_NULL_HANDLE, graphicsPipelineCreateInfo).value;
+        pipline = std::move(uniqueGraphicsPipeline);
+
+        std::cout << "Finished creating graphics object!" << std::endl;
     }
 
 
@@ -163,11 +188,11 @@ struct GraphicsBasic : NEFTY::ExecutablesReference {
     }
 };
 
-void NEFTY::ExecutablesReference::update(NEFTY::NeftyContext * context, GLFWwindow* window) {
+void nefty::ExecutablesReference::update(nefty::NeftyContext * context, GLFWwindow* window) {
     glfwPollEvents();
 }
 
-void NEFTY::ExecutablesReference::render(NEFTY::NeftyContext * context) {
+void nefty::ExecutablesReference::render(nefty::NeftyContext * context) {
     /*
     context->commandBufferUnique->begin(vk::CommandBufferBeginInfo {
         vk::CommandBufferUsageFlagBits::eOneTimeSubmit,
@@ -185,7 +210,7 @@ void NEFTY::ExecutablesReference::render(NEFTY::NeftyContext * context) {
 int main(int argc, const char * argv[]) {
     GraphicsBasic basicRaytracing = GraphicsBasic();
 
-    NEFTY::run(&basicRaytracing);
+    nefty::run(&basicRaytracing);
 
     return 0;
 }

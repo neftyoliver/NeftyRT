@@ -16,7 +16,7 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
-#include <vulkan/vulkan.h>
+#include <vulkan/vulkan.hpp>
 
 #define PRINT_INFO
 
@@ -30,9 +30,11 @@ namespace vkut {
 
 
 
-        for (uint32_t i = 0; i < layerCount; i++) {
-            if (std::strcmp(availableLayers[i].layerName, "VK_LAYER_KHRONOS_validation") != 0) {
-                std::cerr << "Validation layer supports!" << availableLayers.at(i).layerName << std::endl;
+        for (uint32_t i = 0; i < layerCount; i += 1) {
+
+            if (std::strcmp(availableLayers[i].layerName, "VK_LAYER_KHRONOS_validation") == 0) {
+                std::cout << "Validation layer supports! >> " << availableLayers[i].layerName << std::endl;
+
                 return VK_TRUE;
             }
         }

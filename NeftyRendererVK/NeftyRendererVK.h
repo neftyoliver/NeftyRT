@@ -1,10 +1,10 @@
 #pragma once
 
-#include <vulkan/vulkan.hpp>
 
-#include <iostream>
-#include <list>
+#include <vulkan/vulkan.hpp>
 #include <memory>
+
+#include "vulkan_utility.h"
 
 
 #define DEVICE_SELECTION 0
@@ -18,14 +18,14 @@
 
 
 #ifdef NDEBUG
-    const bool enableValidationLayers = false;
+    constexpr bool enableValidationLayers = false;
 #else
-constexpr bool enableValidationLayers = true;
+    constexpr bool enableValidationLayers = true;
 #endif
 
 
 
-namespace NEFTY {
+namespace nefty {
     typedef struct Synchronizer_ {
         vk::UniqueFence fenceUnique;
         vk::UniqueSemaphore semaphoreUnique;
@@ -47,8 +47,7 @@ namespace NEFTY {
         };
         std::vector<const char *> instanceExtensionRequestList = {
             R"(VK_KHR_surface)",
-            R"(VK_KHR_portability_enumeration)",
-
+            R"(VK_KHR_portability_enumeration)"
 
 #ifdef __APPLE__
             "VK_KHR_portability_subset"
@@ -161,17 +160,6 @@ namespace NEFTY {
         };
     }
 
-    namespace PFN_FUNCTION {
-        inline PFN_vkGetBufferDeviceAddressKHR vkGetBufferDeviceAddressKHR;
-        inline PFN_vkCreateAccelerationStructureKHR vkCreateAccelerationStructureKHR;
-        inline PFN_vkDestroyAccelerationStructureKHR vkDestroyAccelerationStructureKHR;
-        inline PFN_vkGetAccelerationStructureBuildSizesKHR vkGetAccelerationStructureBuildSizesKHR;
-        inline PFN_vkGetAccelerationStructureDeviceAddressKHR vkGetAccelerationStructureDeviceAddressKHR;
-        inline PFN_vkCmdBuildAccelerationStructuresKHR vkCmdBuildAccelerationStructuresKHR;
-        inline PFN_vkCreateRayTracingPipelinesKHR vkCreateRayTracingPipelinesKHR;
-        inline PFN_vkGetRayTracingShaderGroupHandlesKHR vkGetRayTracingShaderGroupHandlesKHR;
-        inline PFN_vkCmdTraceRaysKHR vkCmdTraceRaysKHR;
-    }
 }
 
 

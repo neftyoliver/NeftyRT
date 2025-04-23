@@ -1,10 +1,11 @@
 
 #include "NeftyRendererVK.h"
-#include "vulkan_utility.h"
 
-namespace NEFTY {
-    const char * deviceExtensions[255] = {
-        R"(VK_KHR_swapchain)"
+namespace nefty {
+    std::vector<const char*> device_extensions = {
+        R"(VK_KHR_swapchain)",
+        R"(VK_KHR_dynamic_rendering)",
+        R"(VK_EXT_descriptor_buffer)"
     };
 
     void beforeRender();
@@ -24,9 +25,6 @@ namespace NEFTY {
             static_cast<uint32_t>(instanceExtensionRequestList.size()),
             instanceExtensionRequestList.data()
             );
-
-
-
 
         instanceUnique = vk::createInstanceUnique(instCreateInfo);
 
@@ -53,11 +51,45 @@ namespace NEFTY {
 
         const uint32_t queueFamilySelection = vkut::autoSelectQueueFamily(physicalDevicesUnique->at(DEVICE_SELECTION), DEVICE_SELECTION);
 
+        const vk::PhysicalDevice pd = physicalDevicesUnique->at(DEVICE_SELECTION);
+
+        /*** BAD WAY
+        VkPhysicalDeviceVulkan14Features deviceFeaturesVK14 {.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_4_FEATURES};
+        VkPhysicalDeviceVulkan13Features deviceFeaturesVK13{ .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES };
+        VkPhysicalDeviceVulkan12Features deviceFeaturesVK12{ .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES };
+        VkPhysicalDeviceVulkan11Features deviceFeaturesVK11{ .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES };
+        vk::PhysicalDeviceFeatures2 physicalDeviceFeatures2 { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2 };
+
+        pd.getFeatures2(&physicalDeviceFeatures2);
+
+
+        //deviceFeaturesVK13.dynamicRendering = VK_TRUE;
+        //deviceFeaturesVK13.synchronization2 = VK_TRUE;
+        deviceFeaturesVK12.bufferDeviceAddress = VK_TRUE;
+        deviceFeaturesVK12.descriptorIndexing = VK_TRUE;
+
+
+        deviceFeaturesVK13.pNext = &deviceFeaturesVK14;
+        deviceFeaturesVK12.pNext = &deviceFeaturesVK13;
+        deviceFeaturesVK11.pNext = &deviceFeaturesVK12;
+        physicalDeviceFeatures2.pNext = &deviceFeaturesVK11;
+        physicalDeviceFeatures2.features.fillModeNonSolid = VK_TRUE;
+        */
+
+        auto physicalDeviceFeatures = pd.getFeatures2();
+        auto dynamicFeatures = vk::PhysicalDeviceDynamicRenderingFeaturesKHR(1);
+
+        physicalDeviceFeatures.setPNext(&dynamicFeatures);
 
         const auto queueCreateInfo = vk::DeviceQueueCreateInfo({}, queueFamilySelection, 1, &queuePriority);
-        const auto deviceCreateInfo = vk::DeviceCreateInfo({}, 1, &queueCreateInfo, 0, nullptr, 1, deviceExtensions);
-        const vk::PhysicalDevice pd = physicalDevicesUnique->at(DEVICE_SELECTION);
+        auto deviceCreateInfo = vk::DeviceCreateInfo({},
+            1, &queueCreateInfo,
+            0, nullptr,
+            device_extensions.size(), device_extensions.data());
+        deviceCreateInfo.setPNext(&physicalDeviceFeatures);
+
         deviceUnique = pd.createDeviceUnique(deviceCreateInfo);
+
         if (deviceUnique.get() == VK_NULL_HANDLE) {
             std::cerr << "Cannot create logical device." << std::endl;
         }

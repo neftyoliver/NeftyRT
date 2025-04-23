@@ -13,7 +13,7 @@ if(${WIN32})
     set(VULKAN_LIBRARIES vulkan-1)
 endif ()
 
-add_subdirectory(glslang)
+#add_subdirectory(glslang)
 add_subdirectory(tinyobjloader)
 add_subdirectory(glfw)
 
@@ -44,7 +44,7 @@ target_include_directories(imgui
 add_subdirectory(NeftyRendererVK)
 
 function(add_program target)
-    add_dependencies(${target} NeftyRendererVK glfw glslang)
+    add_dependencies(${target} NeftyRendererVK glfw)
 
     target_include_directories(${target}
             PRIVATE include
@@ -53,7 +53,7 @@ function(add_program target)
             PRIVATE ${VULKAN_INCLUDE}
     )
     target_link_directories(${target} PRIVATE ${VULKAN_LIB_DIR})
-    target_link_libraries(${target} PRIVATE NeftyRendererVK PRIVATE glfw PRIVATE glslang PUBLIC ${VULKAN_LIBRARIES})
+    target_link_libraries(${target} PRIVATE NeftyRendererVK PRIVATE glfw PUBLIC ${VULKAN_LIBRARIES})
 endfunction()
 
 function(registerShader theTarget parShaderFileName)
@@ -79,7 +79,7 @@ function(registerShader theTarget parShaderFileName)
             get_filename_component(PURE_NAME ${FileTypedName} NAME_WE)
             add_custom_command(
                     OUTPUT "${PURE_NAME}.spv"
-                    COMMAND "${VULKAN_BIN_DIR}/glslc" -V ${shaderFileName} --target-env="vulkan1.4" -o "${PURE_NAME}.spv"
+                    COMMAND "${VULKAN_BIN_DIR}/glslc" ${shaderFileName} --target-env="vulkan1.4" -o "${PURE_NAME}.spv" -w
                     DEPENDS ${shaderFileName}
                     COMMENT "Compiling new ${FileTypedName} file."
             )
@@ -103,4 +103,5 @@ The main project of this repo.
 
 add_executable(GraphicsBasic src/GraphicsBasic.cpp)
 add_program(GraphicsBasic)
+registerShader(GraphicsBasic GraphicsBasicFragment.frag)
 registerShader(GraphicsBasic GraphicsBasicVertex.vert)

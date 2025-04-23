@@ -3,10 +3,10 @@
 
 #include <NeftyRendererVK.h>
 
-#ifndef RAYTRACINGBASIC_H
-#define RAYTRACINGBASIC_H
+#ifndef EXECUTABLES_REFERENCE_H
+#define EXECUTABLES_REFERENCE_H
 
-namespace NEFTY {
+namespace nefty {
 
     struct ExecutablesReference {
         NeftyContext context;
