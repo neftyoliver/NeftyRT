@@ -77,13 +77,15 @@ function(registerShader theTarget parShaderFileName)
             file(COPY ${shaderFileName} DESTINATION "${CMAKE_SOURCE_DIR}/shader_cash")
             set(PURE_NAME "")
             get_filename_component(PURE_NAME ${FileTypedName} NAME_WE)
-            #[==[
-            add_custom_command( TARGET theTarget POST_BUILD
-                    OUTPUT ${SPIRV_BIN}
-                    COMMAND "${VULKAN_BIN_DIR}/glslc" -V ${shaderFileName} --target-env="vulkan1.4" -o "${SPIRV_BIN}.spv"
+            add_custom_command(
+                    OUTPUT "${PURE_NAME}.spv"
+                    COMMAND "${VULKAN_BIN_DIR}/glslc" -V ${shaderFileName} --target-env="vulkan1.4" -o "${PURE_NAME}.spv"
                     DEPENDS ${shaderFileName}
+                    COMMENT "Compiling new ${FileTypedName} file."
             )
-            ]==]
+            add_custom_target("${PURE_NAME}_TARGET" DEPENDS "${PURE_NAME}.spv")
+            add_dependencies(${theTarget} "${PURE_NAME}_TARGET")
+
         endif ()
     else()
         #Not a shader type
@@ -101,4 +103,4 @@ The main project of this repo.
 
 add_executable(GraphicsBasic src/GraphicsBasic.cpp)
 add_program(GraphicsBasic)
-registerShader(GraphicsBasic GraphicsBasicVertex1.vert)
+registerShader(GraphicsBasic GraphicsBasicVertex.vert)
