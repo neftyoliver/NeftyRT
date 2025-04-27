@@ -208,9 +208,9 @@ void nefty::ExecutablesReference::render(nefty::NeftyContext * context) {
 
 
 int main(int argc, const char * argv[]) {
-    GraphicsBasic basicRaytracing = GraphicsBasic();
+    GraphicsBasic graphics_basic = GraphicsBasic();
 
-    nefty::run(&basicRaytracing);
+    nefty::run(&graphics_basic);
 
     return 0;
 }

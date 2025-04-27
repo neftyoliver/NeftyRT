@@ -16,7 +16,13 @@ namespace nefty {
             instanceLayerRequestList.push_back("VK_LAYER_KHRONOS_validation");
         }
 
-        auto appInfo = vk::ApplicationInfo(APP_NAME, 0.0, APP_NAME, 0.0, VK_API_VERSION_1_4);
+        auto appInfo = vk::ApplicationInfo(APP_NAME, 0.0, APP_NAME, 0.0,
+#ifdef __APPLE__
+            VK_API_VERSION_1_3
+#elif
+            VK_API_VERSION_1_3
+#endif
+            );
         auto instCreateInfo = vk::InstanceCreateInfo(
             vk::InstanceCreateFlagBits::eEnumeratePortabilityKHR,
             &appInfo,

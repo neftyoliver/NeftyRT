@@ -50,7 +50,7 @@ namespace nefty {
             R"(VK_KHR_portability_enumeration)"
 
 #ifdef __APPLE__
-            "VK_KHR_portability_subset"
+            //"VK_KHR_portability_subset"
 #endif
         };
 
