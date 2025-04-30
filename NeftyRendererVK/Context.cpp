@@ -1,7 +1,7 @@
 
 #include "NeftyRendererVK.h"
 
-namespace nefty {
+namespace NEFTY {
     std::vector<const char*> device_extensions = {
         R"(VK_KHR_swapchain)",
         R"(VK_KHR_dynamic_rendering)",
@@ -19,7 +19,7 @@ namespace nefty {
         auto appInfo = vk::ApplicationInfo(APP_NAME, 0.0, APP_NAME, 0.0,
 #ifdef __APPLE__
             VK_API_VERSION_1_3
-#elif
+#else
             VK_API_VERSION_1_3
 #endif
             );
@@ -109,6 +109,8 @@ namespace nefty {
     }
 
     NeftyContext::~NeftyContext() {
+
+
         for (const auto imageView: PresentationUnit.swapChainImageViews) {
             vkDestroyImageView(deviceUnique.get(), imageView, nullptr);
         }

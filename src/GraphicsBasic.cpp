@@ -6,7 +6,7 @@
 
 
 
-struct GraphicsBasic : nefty::ExecutablesReference {
+struct GraphicsBasic : NEFTY::ExecutablesReference {
     typedef ExecutablesReference SUPER;
 
 
@@ -17,7 +17,7 @@ struct GraphicsBasic : nefty::ExecutablesReference {
     vk::RenderPass renderPass;
     vk::SubpassDescription subpass;
 
-    vk::UniquePipeline pipline;
+    vk::UniquePipeline piplineUnique;
     vk::PipelineLayout pipelineLayout;
     vk::DescriptorSetLayout descriptorSetLayout;
     vk::DescriptorSet descriptorSet;
@@ -28,9 +28,7 @@ struct GraphicsBasic : nefty::ExecutablesReference {
 
         vk::PipelineRenderingCreateInfo renderingInfo {};
 
-        auto vecVertexShaderCode = vkut::readShaderCodeUINT32("GraphicsBasicFragment.spv");
-        auto vecFragmentShaderCodes = vkut::readShaderCodeUINT32("GraphicsBasicFragment.spv");
-
+        auto vecVertexShaderCode = vkut::readShaderCodeUINT32("GraphicsBasicVertex.spv");
         auto vertexShaderModule = context.deviceUnique->createShaderModuleUnique(
             vk::ShaderModuleCreateInfo(
                 {},
@@ -39,7 +37,12 @@ struct GraphicsBasic : nefty::ExecutablesReference {
                     nullptr
                 )
         );
+        auto vertexShaderStages = vk::PipelineShaderStageCreateInfo {};
+        vertexShaderStages.setModule(vertexShaderModule.get());
+        vertexShaderStages.setStage(vk::ShaderStageFlagBits::eVertex);
+        vertexShaderStages.setPName(R"(main)");
 
+        auto vecFragmentShaderCodes = vkut::readShaderCodeUINT32("GraphicsBasicFragment.spv");
         auto fragmentShaderModule = context.deviceUnique->createShaderModuleUnique(
             vk::ShaderModuleCreateInfo(
                 {},
@@ -48,20 +51,18 @@ struct GraphicsBasic : nefty::ExecutablesReference {
                     nullptr
                 )
         );
+        auto fragmentShaderStages = vk::PipelineShaderStageCreateInfo {};
+        fragmentShaderStages.setModule(fragmentShaderModule.get());
+        fragmentShaderStages.setStage(vk::ShaderStageFlagBits::eFragment);
+        fragmentShaderStages.setPName(R"(main)");
 
 
 
         constexpr uint32_t SHADER_COUNT = 2;
 
-        auto vertexShaderStages = vk::PipelineShaderStageCreateInfo {};
-        vertexShaderStages.setModule(vertexShaderModule.get());
-        vertexShaderStages.setStage(vk::ShaderStageFlagBits::eVertex);
-        vertexShaderStages.setPName("main");
 
-        auto fragmentShaderStages = vk::PipelineShaderStageCreateInfo{};
-        fragmentShaderStages.setModule(fragmentShaderModule.get());
-        fragmentShaderStages.setStage(vk::ShaderStageFlagBits::eFragment);
-        fragmentShaderStages.setPName("main");
+
+
 
         vk::PipelineShaderStageCreateInfo shaderStages[SHADER_COUNT] { vertexShaderStages, fragmentShaderStages};
 
@@ -106,6 +107,14 @@ struct GraphicsBasic : nefty::ExecutablesReference {
         rasterizationStateCreateInfo.setCullMode(vk::CullModeFlagBits::eFront);
         rasterizationStateCreateInfo.setFrontFace(vk::FrontFace::eCounterClockwise);
 
+        auto multisampleStateCreateInfo = vk::PipelineMultisampleStateCreateInfo {};
+        multisampleStateCreateInfo.setSampleShadingEnable(false);
+        multisampleStateCreateInfo.setRasterizationSamples(vk::SampleCountFlagBits::e1);
+        multisampleStateCreateInfo.setMinSampleShading(1.0f);
+        multisampleStateCreateInfo.setPSampleMask(VK_NULL_HANDLE);
+        multisampleStateCreateInfo.setAlphaToCoverageEnable(VK_FALSE);
+        multisampleStateCreateInfo.setAlphaToOneEnable(VK_FALSE);
+
         auto colorBlendStateCreateInfo = vk::PipelineColorBlendStateCreateInfo {};
         colorBlendStateCreateInfo.setLogicOpEnable(VK_FALSE);
         colorBlendStateCreateInfo.setLogicOp(vk::LogicOp::eCopy);
@@ -126,9 +135,10 @@ struct GraphicsBasic : nefty::ExecutablesReference {
 
         auto pipelineLayoutCreateInfo = vk::PipelineLayoutCreateInfo{};
         pipelineLayoutCreateInfo.setSetLayoutCount(0);
-        pipelineLayoutCreateInfo.setPSetLayouts(nullptr);
-        pipelineLayoutCreateInfo.setLayoutCount = 0;
-        pipelineLayoutCreateInfo.setPSetLayouts(nullptr);
+        pipelineLayoutCreateInfo.setSetLayouts(VK_NULL_HANDLE);
+        pipelineLayoutCreateInfo.setPushConstantRangeCount(0);
+        pipelineLayoutCreateInfo.setPushConstantRanges(VK_NULL_HANDLE);
+        this->pipelineLayout = context.deviceUnique->createPipelineLayout(pipelineLayoutCreateInfo);
 
         auto dynamicStateCreateInfo = vk::PipelineDynamicStateCreateInfo {};
         std::vector<vk::DynamicState> dynamicStages {
@@ -139,7 +149,7 @@ struct GraphicsBasic : nefty::ExecutablesReference {
         dynamicStateCreateInfo.setDynamicStateCount(dynamicStages.size());
 
         auto graphicsPipelineCreateInfo = vk::GraphicsPipelineCreateInfo {};
-        //graphicsPipelineCreateInfo.setPNext(&renderingInfo);
+        graphicsPipelineCreateInfo.setPNext(&renderingInfo);
         graphicsPipelineCreateInfo.setStageCount(SHADER_COUNT);
         graphicsPipelineCreateInfo.setStages(shaderStages);
         graphicsPipelineCreateInfo.setPVertexInputState(&vertexInputStateCreateInfo);
@@ -147,6 +157,7 @@ struct GraphicsBasic : nefty::ExecutablesReference {
         graphicsPipelineCreateInfo.setPTessellationState(&tessellation_state_create_info); //not using
         graphicsPipelineCreateInfo.setPViewportState(&viewportStateCreateInfo);
         graphicsPipelineCreateInfo.setPRasterizationState(&rasterizationStateCreateInfo);
+        graphicsPipelineCreateInfo.setPMultisampleState(&multisampleStateCreateInfo);
         graphicsPipelineCreateInfo.setPColorBlendState(&colorBlendStateCreateInfo);
         graphicsPipelineCreateInfo.setPDepthStencilState(&depthStencilStateCreateInfo);
         graphicsPipelineCreateInfo.setLayout(pipelineLayout);
@@ -173,7 +184,7 @@ pipeline_create.stencilAttachmentFormat = depth_format;
 
 
         auto uniqueGraphicsPipeline = context.deviceUnique->createGraphicsPipelineUnique(VK_NULL_HANDLE, graphicsPipelineCreateInfo).value;
-        pipline = std::move(uniqueGraphicsPipeline);
+        piplineUnique = std::move(uniqueGraphicsPipeline);
 
         std::cout << "Finished creating graphics object!" << std::endl;
     }
@@ -188,29 +199,34 @@ pipeline_create.stencilAttachmentFormat = depth_format;
     }
 };
 
-void nefty::ExecutablesReference::update(nefty::NeftyContext * context, GLFWwindow* window) {
+void NEFTY::ExecutablesReference::update(NEFTY::NeftyContext * context, GLFWwindow* window) {
     glfwPollEvents();
-}
 
-void nefty::ExecutablesReference::render(nefty::NeftyContext * context) {
-    /*
-    context->commandBufferUnique->begin(vk::CommandBufferBeginInfo {
+    auto beginInfo = vk::CommandBufferBeginInfo {
         vk::CommandBufferUsageFlagBits::eOneTimeSubmit,
         nullptr,
         nullptr
-    });
+    };
+
+    context->commandBufferUnique->begin(beginInfo);
+    context->commandBufferUnique->bindPipeline(vk::PipelineBindPoint::eGraphics, piplineUnique);
 
     context->commandBufferUnique->end();
-    */
+}
+
+void NEFTY::ExecutablesReference::render(NEFTY::NeftyContext * context) {
+
+
+
 }
 
 
 
 
 int main(int argc, const char * argv[]) {
-    GraphicsBasic graphics_basic = GraphicsBasic();
+    auto graphics_basic = GraphicsBasic();
 
-    nefty::run(&graphics_basic);
+    NEFTY::run(&graphics_basic);
 
     return 0;
 }

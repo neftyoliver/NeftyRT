@@ -25,7 +25,7 @@
 
 
 
-namespace nefty {
+namespace NEFTY {
     typedef struct Synchronizer_ {
         vk::UniqueFence fenceUnique;
         vk::UniqueSemaphore semaphoreUnique;
@@ -88,7 +88,6 @@ namespace nefty {
             };
 
         } float4_u;
-
         typedef struct f3_ {
             f3_(const float px, const float py, const float pz): x(px), y(py), z(pz) {}
 
@@ -102,7 +101,6 @@ namespace nefty {
             };
 
         } float3_u;
-
         typedef struct f2_ {
             f2_(const float px, const float py): x(px), y(py){}
 
@@ -116,15 +114,17 @@ namespace nefty {
 
         } float2_u;
 
-        inline struct UniformBufferObject_ {
 
-        } UniformBufferObject;
-
-        inline struct StorageBufferObject_ {
-
-        } StorageBufferObject;
 
         /*
+         *
+         * DefaultRenderPass
+         *
+         * GraphicsShaderModules
+         * RaytracingShaderModules
+         *
+         * UniformBufferObject
+         * StorageBufferObject
          * Image
          * ImageView
          *
@@ -135,29 +135,35 @@ namespace nefty {
     }
 
     namespace RENDER_UNIT {
+        /***
+         *
+         * Rendering units are the objective unit that dose rendering operation with a subjects.
+         * it's a unit because it operates itself when the method is called.
+         * while the subjects are just a data, units are the ones using the date in certain manners.
+         *
+         * The Units:
+         *
+         * CommandOperatorUnique
+         * CommandRecorderUnique
+         * DynamicGraphicsPiplineUnique WORKING!
+         * GraphicsPiplineUnique
+         * RayTracingBindTable
+         * RayTracingPiplineUnique
+         *
+         */
 
+        /***
+         *
+         *  Graphics pipline info builder.
+         *  you can use builder pattern for the graphics pipline building.
+         *  for many of reasons the build().get(std::unique_ptr) method will give you unique ptr of the object.
+         *
+         */
+        struct GraphicsPiplineCreateInfoBuilder {
 
-        enum PIPLINE_TYPE {
-            COMPUTE_PIPLINE_TYPE,
-            RAYTRACING_PIPLINE_TYPE,
-            GRAPHICS_PIPLINE_TYPE,
         };
-
-        struct RenderingUnit {
-            PIPLINE_TYPE piplineOperationType;
-            std::unique_ptr<VkPipeline> pipelineUnique = std::make_unique<VkPipeline>();
-        };
-
-
-        struct RayTracingPipline {
-
-        };
-
-        struct GraphicsPipeline {
-
-            VkGraphicsPipelineCreateInfo pipelineCreateInfo = {};
-
-        };
+        typedef struct DynamicGraphicsPiplineUnique_ {
+        } DynamicGraphicsPiplineUnique;
     }
 
 }

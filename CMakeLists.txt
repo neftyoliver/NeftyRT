@@ -29,6 +29,7 @@ endif ()
 #add_subdirectory(glslang)
 add_subdirectory(tinyobjloader)
 add_subdirectory(glfw)
+add_subdirectory(vk-bootstrap)
 
 add_library(imgui STATIC
         imgui/imgui.cpp
@@ -75,52 +76,36 @@ function(registerShader theTarget parShaderFileName)
     find_file(shaderFileName NAMES ${parShaderFileName} PATHS "${CMAKE_SOURCE_DIR}/shaders")
     set(FileTypedName ${parShaderFileName})
 
-
-
     if (NOT ${shaderFileName} STREQUAL "shaderFileName-NOTFOUND")
         message(STATUS "Shader source code ${shaderFileName} exist!")
+        set(PURE_NAME "")
+        get_filename_component(PURE_NAME ${FileTypedName} NAME_WE)
 
-        if(NOT EXISTS shader_cash/${shaderFileName})
-            message("creating shader cash in ${shaderFileName}")
-            if (NOT EXISTS shader_cash)
-                file(MAKE_DIRECTORY ${CMAKE_SOURCE_DIR}/shader_cash)
-            endif ()
-            file(COPY ${shaderFileName} DESTINATION "${CMAKE_SOURCE_DIR}/shader_cash")
+        if (${APPLE})
+            add_custom_command(
+                    OUTPUT "${PURE_NAME}.spv"
+                    COMMAND glslc ${FileTypedName} -o "${PURE_NAME}.spv" -w
+                    DEPENDS ${shaderFileName}
+                    COMMENT "Compiling new ${FileTypedName} file."
+            )
+        else (${WIN32})
+            add_custom_command(
+                    OUTPUT "${PURE_NAME}.spv"
+                    COMMAND "${VULKAN_BIN_DIR}/glslc" ${PROJECT_SOURCE_DIR}/shaders/${FileTypedName} -o "${PURE_NAME}.spv" -w
+                    DEPENDS ${shaderFileName}
+                    COMMENT "Compiling new ${FileTypedName} file."
+            )
         endif ()
 
-        if (shaders/${FileTypedName} IS_NEWER_THAN shader_cash/${FileTypedName})
-            file(COPY ${shaderFileName} DESTINATION "${CMAKE_SOURCE_DIR}/shader_cash")
-            set(PURE_NAME "")
-            get_filename_component(PURE_NAME ${FileTypedName} NAME_WE)
+        add_custom_target("${PURE_NAME}_SPV" DEPENDS "${PURE_NAME}.spv")
+        add_dependencies(${theTarget} "${PURE_NAME}_SPV")
 
 
-            if (${APPLE})
-                add_custom_command(
-                        OUTPUT "${PURE_NAME}.spv"
-                        COMMAND glslc ${shaderFileName} -o "${PURE_NAME}.spv" -w
-                        DEPENDS ${shaderFileName}
-                        COMMENT "Compiling new ${FileTypedName} file."
-                )
-            else ()
-                add_custom_command(
-                        OUTPUT "${PURE_NAME}.spv"
-                        COMMAND "${VULKAN_BIN_DIR}/glslc" ${shaderFileName} -o "${PURE_NAME}.spv" -w
-                        DEPENDS ${shaderFileName}
-                        COMMENT "Compiling new ${FileTypedName} file."
-                )
-            endif ()
-
-
-
-            add_custom_target("${PURE_NAME}_TARGET" DEPENDS "${PURE_NAME}.spv")
-            add_dependencies(${theTarget} "${PURE_NAME}_TARGET")
-
-        endif ()
     else()
         #Not a shader type
         message(WARNING "${shaderFileName} is not a shader type file.")
     endif ()
-
+    unset(FileTypedName)
 endfunction()
 
 #[==[
@@ -132,5 +117,5 @@ The main project of this repo.
 
 add_executable(GraphicsBasic src/GraphicsBasic.cpp)
 add_program(GraphicsBasic)
-registerShader(GraphicsBasic GraphicsBasicFragment.frag)
 registerShader(GraphicsBasic GraphicsBasicVertex.vert)
+registerShader(GraphicsBasic GraphicsBasicFragment.frag)

@@ -6,7 +6,7 @@
 #ifndef EXECUTABLES_REFERENCE_H
 #define EXECUTABLES_REFERENCE_H
 
-namespace nefty {
+namespace NEFTY {
 
     struct ExecutablesReference {
         NeftyContext context;
