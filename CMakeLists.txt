@@ -29,7 +29,7 @@ endif ()
 #add_subdirectory(glslang)
 add_subdirectory(tinyobjloader)
 add_subdirectory(glfw)
-add_subdirectory(vk-bootstrap)
+#add_subdirectory(vk-bootstrap)
 
 add_library(imgui STATIC
         imgui/imgui.cpp

@@ -152,6 +152,9 @@ namespace NEFTY {
          *
          */
 
+
+        typedef struct DynamicGraphicsPiplineUnique_ {
+        } DynamicGraphicsPiplineUnique;
         /***
          *
          *  Graphics pipline info builder.
@@ -160,10 +163,12 @@ namespace NEFTY {
          *
          */
         struct GraphicsPiplineCreateInfoBuilder {
+            vk::PipelineRenderingCreateInfo dynamicRenderingInfo;
 
+            GraphicsPiplineCreateInfoBuilder build();
+            std::unique_ptr<DynamicGraphicsPiplineUnique> get();
         };
-        typedef struct DynamicGraphicsPiplineUnique_ {
-        } DynamicGraphicsPiplineUnique;
+
     }
 
 }

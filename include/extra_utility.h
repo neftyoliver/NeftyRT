@@ -1,8 +1,19 @@
-//
-// Created by NeftyOliver on 25. 4. 30.
-//
+#pragma once
+#include <cstdint>
 
-#ifndef EXTRA_UTILITY_H
-#define EXTRA_UTILITY_H
+namespace NEFTY {
+    template<typename T>
+    struct ArrayWithLengthU64 {
+        T data[];
+        uint64_t length;
+    };
 
-#endif //EXTRA_UTILITY_H
+    template<typename T>
+    union SpookyPTR64 {
+        T * asKnownType;
+        void * asVoidPtr;
+        uint64_t asUint64;
+        SpookyPTR64() : asKnownType(nullptr), asVoidPtr(nullptr) {}
+        explicit SpookyPTR64(T * ptr) : asKnownType(ptr), asVoidPtr(nullptr) {}
+    };
+}

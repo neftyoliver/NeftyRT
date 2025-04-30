@@ -56,8 +56,6 @@ struct GraphicsBasic : NEFTY::ExecutablesReference {
         fragmentShaderStages.setStage(vk::ShaderStageFlagBits::eFragment);
         fragmentShaderStages.setPName(R"(main)");
 
-
-
         constexpr uint32_t SHADER_COUNT = 2;
 
 
