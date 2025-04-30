@@ -114,8 +114,6 @@ namespace NEFTY {
 
         } float2_u;
 
-
-
         /*
          *
          * DefaultRenderPass

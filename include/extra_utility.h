@@ -9,11 +9,16 @@ namespace NEFTY {
     };
 
     template<typename T>
-    union SpookyPTR64 {
+    union TemplatedPTR64 {
         T * asKnownType;
         void * asVoidPtr;
         uint64_t asUint64;
-        SpookyPTR64() : asKnownType(nullptr), asVoidPtr(nullptr) {}
-        explicit SpookyPTR64(T * ptr) : asKnownType(ptr), asVoidPtr(nullptr) {}
+        TemplatedPTR64() : asKnownType(nullptr), asVoidPtr(nullptr) {}
+        explicit TemplatedPTR64(T * ptr) : asKnownType(ptr), asVoidPtr(nullptr) {}
+    };
+
+    union SpookyPTR64 {
+        void * asVoidPtr;
+        uint64_t asUint64;
     };
 }
